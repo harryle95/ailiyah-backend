@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-** Summary ** 
-Describe the new feature you want to be added 
+** Summary **
+Describe the new feature you want to be added
 
-** Example ** 
+** Example **
 Provide an example or use-case of the requested feature
