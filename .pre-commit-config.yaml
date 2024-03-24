@@ -45,10 +45,3 @@ repos:
     rev: "v0.9.1"
     hooks:
       - id: sphinx-lint
-  - repo: local
-    hooks:
-      - id: pypi-readme
-        name: pypi-readme
-        language: python
-        entry: python tools/pypi_readme.py
-        types: [markdown]
