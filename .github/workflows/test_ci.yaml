@@ -36,12 +36,12 @@ jobs:
           cache: true
           cache-dependency-path: |
             ./pdm.lock
-            
+
       - name: Install dependencies
         run: pdm install -G:all
 
       - name: Test with pytest
-        run: pdm run pytest tests --cov=src --cov-report=xml 
+        run: pdm run pytest tests --cov=src --cov-report=xml
 
       - name: Rename coverage file
         if: inputs.do-coverage

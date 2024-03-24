@@ -8,7 +8,7 @@ on:
 jobs:
   validate:
     uses: ./.github/workflows/validate_ci.yaml
-  
+
   analysis:
     uses: ./.github/workflows/analysis_ci.yaml
 

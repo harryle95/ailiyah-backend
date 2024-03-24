@@ -149,3 +149,29 @@ known-first-party = ["src", "tests"]
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = 90
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.*" = [
+  "A",
+  "ARG",
+  "B",
+  "BLE",
+  "C901",
+  "D",
+  "DTZ",
+  "EM",
+  "FBT",
+  "G",
+  "N",
+  "PGH",
+  "PIE",
+  "PLR",
+  "PLW",
+  "PTH",
+  "RSE",
+  "S",
+  "S101",
+  "SIM",
+  "TCH",
+  "TRY",
+]
