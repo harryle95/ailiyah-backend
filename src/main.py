@@ -1,2 +1,5 @@
-def add(first: int, second: int)->int:
-    return first + second 
+__all__ = ["add"]
+
+
+def add(first: int, second: int) -> int:
+    return first + second

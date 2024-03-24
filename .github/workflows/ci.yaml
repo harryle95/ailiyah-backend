@@ -10,9 +10,11 @@ jobs:
     uses: ./.github/workflows/validate_ci.yaml
 
   analysis:
+    needs: validate
     uses: ./.github/workflows/analysis_ci.yaml
 
   test:
+    needs: validate
     name: "test (${{ matrix.python-version }})"
     strategy:
       fail-fast: true
@@ -26,7 +28,7 @@ jobs:
   sonar:
     needs:
       - test
-      - validate
+      - analysis
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
