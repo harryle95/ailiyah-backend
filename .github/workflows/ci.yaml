@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/test_ci.yaml
     with:
       python-version: ${{ matrix.python-version }}
-      do-coverage: ${{ matrix.python-version == 3.12 }}
+      do-coverage: ${{ matrix.python-version == 3.11 }}
 
   sonar:
     needs:
