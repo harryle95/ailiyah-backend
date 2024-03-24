@@ -5,13 +5,10 @@ description = "Default template for PDM package"
 authors = [
     {name = "harryle", email = "lehoangsonsg@gmail.com"},
 ]
-dependencies = [
-    "litestar[standard]>=2.7.0",
-]
+dependencies = []
 requires-python = "==3.11.*"
 readme = "README.md"
 license = {text = "MIT"}
-
 
 [tool.pdm]
 distribution = false
@@ -21,9 +18,135 @@ test = [
     "pytest>=8.1.1",
     "pytest-asyncio>=0.23.6",
     "pytest-cov>=4.1.0",
+    "covdefaults>=2.3.0",
 ]
 analysis = [
     "ruff>=0.3.4",
     "mypy>=1.9.0",
     "pre-commit>=3.6.2",
+    "slotscheck>=0.18.0",
+    "pyright>=1.1.355",
 ]
+
+[tool.codespell]
+ignore-words-list = "selectin"
+skip = 'pdm.lock'
+
+[tool.coverage.run]
+concurrency = ["multiprocessing", "thread"]
+omit = ["*/tests/*"]
+parallel = true
+plugins = ["covdefaults"]
+source = ["src"]
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__",
+    "@(abc\\.)?abstractmethod",
+    "def __getattr__",
+    "if TYPE_CHECKING:"
+]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config --dist=loadgroup -m 'not server_integration'"
+asyncio_mode = "auto"
+
+[tool.mypy]
+packages = ["src", "tests"]
+python_version = "3.11"
+
+disallow_any_generics = false
+disallow_untyped_decorators = true
+enable_error_code = "ignore-without-code"
+implicit_reexport = false
+show_error_codes = true
+strict = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.pyright]
+disableBytesTypePromotions = true
+include = ["src", "tests"]
+pythonVersion = "3.11"
+reportUnnecessaryTypeIgnoreComments = true
+
+[tool.slotscheck]
+strict-imports = false
+
+[tool.ruff]
+lint.select = [
+  "A", # flake8-builtins
+  "B", # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4", # flake8-comprehensions
+  "C90", # mccabe
+  "D", # pydocstyle
+  "DJ", # flake8-django
+  "DTZ", # flake8-datetimez
+  "E", # pycodestyle errors
+  "ERA", # eradicate
+  "EXE", # flake8-executable
+  "F", # pyflakes
+  "G", # flake8-logging-format
+  "I", # isort
+  "ICN", # flake8-import-conventions
+  "ISC", # flake8-implicit-str-concat
+  "N", # pep8-naming
+  "PIE", # flake8-pie
+  "PLC", # pylint - convention
+  "PLE", # pylint - error
+  "PLW", # pylint - warning
+  "PTH", # flake8-use-pathlib
+  "Q", # flake8-quotes
+  "RET", # flake8-return
+  "RUF", # Ruff-specific rules
+  "S", # flake8-bandit
+  "SIM", # flake8-simplify
+  "T10", # flake8-debugger
+  "T20", # flake8-print
+  "TCH", # flake8-type-checking
+  "TID", # flake8-tidy-imports
+  "UP", # pyupgrade
+  "W", # pycodestyle - warning
+  "YTT", # flake8-2020
+]
+line-length = 120
+lint.ignore = [
+  "A003", # flake8-builtins - class attribute {name} is shadowing a python builtin
+  "B010", # flake8-bugbear - do not call setattr with a constant attribute value
+  "D100", # pydocstyle - missing docstring in public module
+  "D101", # pydocstyle - missing docstring in public class
+  "D102", # pydocstyle - missing docstring in public method
+  "D103", # pydocstyle - missing docstring in public function
+  "D104", # pydocstyle - missing docstring in public package
+  "D105", # pydocstyle - missing docstring in magic method
+  "D106", # pydocstyle - missing docstring in public nested class
+  "D107", # pydocstyle - missing docstring in __init__
+  "D202", # pydocstyle - no blank lines allowed after function docstring
+  "D205", # pydocstyle - 1 blank line required between summary line and description
+  "D415", # pydocstyle - first line should end with a period, question mark, or exclamation point
+  "E501", # pycodestyle line too long, handled by ruff format
+  "PLW2901", # pylint - for loop variable overwritten by assignment target
+  "RUF012", # Ruff-specific rule - annotated with classvar
+  "ISC001", # Ruff formatter incompatible
+]
+
+src = ["src", "tests"]
+target-version = "py311"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "tests"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 90
+
