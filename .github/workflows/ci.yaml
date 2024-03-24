@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  merge_group:
+  push:
+
+jobs:
+  validate:
+    uses: ./.github/workflows/validate_ci.yaml
+
+  analysis:
+    needs: validate
+    uses: ./.github/workflows/analysis_ci.yaml
+
+  test:
+    needs: validate
+    name: "test (${{ matrix.python-version }})"
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [ "3.11", "3.12" ]
+    uses: ./.github/workflows/test_ci.yaml
+    with:
+      python-version: ${{ matrix.python-version }}
+      do-coverage: ${{ matrix.python-version == 3.11 }}
+
+  sonar:
+    needs:
+      - test
+      - analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

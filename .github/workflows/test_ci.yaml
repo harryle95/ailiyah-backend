@@ -1,0 +1,52 @@
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      do-coverage:
+        required: true
+        type: boolean
+        default: false
+      os:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+
+jobs:
+  test:
+    runs-on: ${{inputs.os}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - uses: pdm-project/setup-pdm@v4
+        name: Set up PDM
+        with:
+          python-version: "3.11"
+          allow-python-prereleases: false
+          cache: true
+          cache-dependency-path: |
+            ./pdm.lock
+
+      - name: Install dependencies
+        run: pdm install -G:all
+
+      - name: Test with pytest
+        run: pdm run pytest tests --cov=src --cov-report=xml
+
+      - name: Rename coverage file
+        if: inputs.do-coverage
+        run: mv .coverage .coverage.${{ inputs.python-version }}
+
+      - name: Upload coverage
+        if: inputs.do-coverage
+        uses: codecov/codecov-action@v3
