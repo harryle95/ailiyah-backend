@@ -9,6 +9,8 @@ dependencies = [
     "litestar[standard]>=2.7.1",
     "pillow>=10.2.0",
     "sqlalchemy>=2.0.29",
+    "advanced-alchemy>=0.9.0",
+    "aiosqlite>=0.20.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

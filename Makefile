@@ -58,6 +58,8 @@ clean: 												## Cleanup temporary build artifacts
 	@find . -name '__pycache__' -exec rm -rf {} +
 	@find . -name '.ipynb_checkpoints' -exec rm -rf {} +
 	@rm -rf .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache
+	@echo '=>Removing db data'
+	@rm -rf *.sqlite
 	$(MAKE) docs-clean
 
 .PHONY: destroy
@@ -159,3 +161,17 @@ docs-linkcheck: 									## Run the link check on the docs
 .PHONY: docs-linkcheck-full
 docs-linkcheck-full: 									## Run the full link check on the docs
 	@$(PDM) run sphinx-build -b linkcheck ./docs ./docs/_build -D linkcheck_anchors=0
+
+# =============================================================================
+# Application
+# =============================================================================
+.PHONY: app
+app:												## Start the application - production mode
+	@echo "=>Running application"
+	@$(PDM) run litestar --app src.app:app run
+
+
+.PHONY: app-dev
+app-dev:											## Start the application - debug mode
+	@echo "=>Running application developer mode"
+	@$(PDM) run litestar --app src.app:app run --debug --reload
