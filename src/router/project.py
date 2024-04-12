@@ -1,18 +1,17 @@
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from litestar import get
 from litestar.contrib.sqlalchemy.dto import SQLAlchemyDTO, SQLAlchemyDTOConfig
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.model.project import Project
 from src.router.base import BaseController, read_items_by_attrs
-from src.router.utils.dto import DTOGenerator
+from src.router.typing.types import ProjectDTO
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 __all__ = ("ProjectController",)
-
-
-ProjectDTO = DTOGenerator[Project](read_kwargs={"max_nested_depth": 1}, write_kwargs={"max_nested_depth": 0})
 
 
 class ProjectLiteDTO(SQLAlchemyDTO[Project]):
