@@ -5,7 +5,7 @@
 groups = ["default", "analysis", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:cc7acf90076ccbda667ee2a2fc1a7cd696db096e4a9bc4732a982c8bd9b2d748"
+content_hash = "sha256:6cf6abc60e098c870a103c4ceb527059520f364fbee7996f121510525803bc44"
 
 [[package]]
 name = "advanced-alchemy"
@@ -22,6 +22,17 @@ dependencies = [
 files = [
     {file = "advanced_alchemy-0.9.0-py3-none-any.whl", hash = "sha256:882cf8b27cc8800f80971d44eb2c65f3a8718c28f2552a04ffe345ba7ac1e922"},
     {file = "advanced_alchemy-0.9.0.tar.gz", hash = "sha256:25c27f57cb1b9cebf3073742c64061cea2b8b765660cb59fa02430cfb7a5c018"},
+]
+
+[[package]]
+name = "aiofiles"
+version = "23.2.1"
+requires_python = ">=3.7"
+summary = "File support for asyncio."
+groups = ["default"]
+files = [
+    {file = "aiofiles-23.2.1-py3-none-any.whl", hash = "sha256:19297512c647d4b27a2cf7c34caa7e405c0d60b5560618a29a9fe027b18b0107"},
+    {file = "aiofiles-23.2.1.tar.gz", hash = "sha256:84ec2218d8419404abcb9f0c02df3f34c6e0a68ed41072acfb1cef5cbc29051a"},
 ]
 
 [[package]]
@@ -916,6 +927,28 @@ files = [
     {file = "SQLAlchemy-2.0.29-cp311-cp311-win_amd64.whl", hash = "sha256:205f5a2b39d7c380cbc3b5dcc8f2762fb5bcb716838e2d26ccbc54330775b003"},
     {file = "SQLAlchemy-2.0.29-py3-none-any.whl", hash = "sha256:dc4ee2d4ee43251905f88637d5281a8d52e916a021384ec10758826f5cbae305"},
     {file = "SQLAlchemy-2.0.29.tar.gz", hash = "sha256:bd9566b8e58cabd700bc367b60e90d9349cd16f0984973f98a9a09f9c64e86f0"},
+]
+
+[[package]]
+name = "types-aiofiles"
+version = "23.2.0.20240403"
+requires_python = ">=3.8"
+summary = "Typing stubs for aiofiles"
+groups = ["default"]
+files = [
+    {file = "types-aiofiles-23.2.0.20240403.tar.gz", hash = "sha256:1ffcf8f5f72b81f71139f754ea2610ab0017f27ba4fd771e187b07840ee49c0f"},
+    {file = "types_aiofiles-23.2.0.20240403-py3-none-any.whl", hash = "sha256:adeeb4b999f19fda2dfe91c07857ff54701b6ee9b227b523a5a7be92125a2c5f"},
+]
+
+[[package]]
+name = "types-pillow"
+version = "10.2.0.20240406"
+requires_python = ">=3.8"
+summary = "Typing stubs for Pillow"
+groups = ["default"]
+files = [
+    {file = "types-Pillow-10.2.0.20240406.tar.gz", hash = "sha256:62e0cc1f17caba40e72e7154a483f4c7f3bea0e1c34c0ebba9de3c7745bc306d"},
+    {file = "types_Pillow-10.2.0.20240406-py3-none-any.whl", hash = "sha256:5ac182e8afce53de30abca2fdf9cbec7b2500e549d0be84da035a729a84c7c47"},
 ]
 
 [[package]]

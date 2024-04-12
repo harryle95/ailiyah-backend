@@ -18,7 +18,7 @@ ProjectDTO = DTOGenerator[Project](read_kwargs={"max_nested_depth": 1}, write_kw
 @dataclass
 class _RequestWithRawFile:
     project_id: UUID
-    prompt: str
+    prompt: str | None
     file: UploadFile
 
 

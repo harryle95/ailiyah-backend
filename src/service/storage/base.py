@@ -11,17 +11,13 @@ ImageLike = UploadFile
 
 class StorageServer(ABC):
     @abc.abstractmethod
-    def create(self, image: ImageLike) -> UUID:
+    async def create(self, image: ImageLike) -> UUID:
         return uuid.uuid4()
 
     @abc.abstractmethod
-    def read(self, id: UUID) -> ImageLike | None:
-        return None
+    async def update(self, image: ImageLike, id: UUID) -> None:
+        return
 
     @abc.abstractmethod
-    def update(self, image: ImageLike, id: UUID) -> UUID:
-        return id
-
-    @abc.abstractmethod
-    def delete(self, id: UUID) -> UUID:
-        return id
+    async def delete(self, id: UUID) -> None:
+        return
