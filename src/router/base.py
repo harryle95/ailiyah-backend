@@ -1,3 +1,4 @@
+# ruff: noqa: A002
 import datetime
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
