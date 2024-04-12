@@ -1,4 +1,6 @@
-from litestar import post
+from uuid import UUID
+
+from litestar import get, post
 from litestar.response import Stream
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,3 +31,8 @@ class RequestController(BaseController[Request]):
         )
         result: Request = await create_item(session=transaction, table=Request, data=request_data)
         return result
+
+    @get(path="/image/{id: uuid}", return_dto=None)
+    async def get_image(self, transaction: AsyncSession, id: UUID) -> Stream:
+        storage = LocalFileStorage()  # type: ignore
+        return await storage.read_stream(id)
