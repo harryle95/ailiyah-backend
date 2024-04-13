@@ -60,6 +60,7 @@ clean: 												## Cleanup temporary build artifacts
 	@rm -rf .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache
 	@echo '=>Removing db data'
 	@rm -rf *.sqlite
+	@rm -rf storage/*
 	$(MAKE) docs-clean
 
 .PHONY: destroy
