@@ -17,7 +17,5 @@ class Project(Base):
     name: Mapped[str] = mapped_column(nullable=False)
 
     requests: Mapped[list["Request"]] = relationship(
-        "Request",
-        lazy="selectin",
-        info=dto_field("read-only"),
+        "Request", lazy="selectin", info=dto_field("read-only"), cascade="all, delete"
     )
