@@ -7,15 +7,15 @@ from litestar import Litestar
 from litestar.testing import AsyncTestClient
 
 from src.helpers import create_db_config, provide_transaction
-from src.router.project import ProjectController
+from src.router import ProjectController, RequestController
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="class", autouse=True)
 def test_client() -> Generator[AsyncTestClient, None, None]:
     p = Path("test.sqlite")
     db_config = create_db_config("test.sqlite")
     app = Litestar(
-        [ProjectController],
+        [ProjectController, RequestController],
         dependencies={"transaction": provide_transaction},
         plugins=[SQLAlchemyPlugin(db_config)],
     )

@@ -1,7 +1,7 @@
 import datetime
 import os
 import random
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar
 from uuid import UUID
 
@@ -66,26 +66,21 @@ class ResponseValidator:
         ResponseValidator.validate_status(409, response)
 
 
-class AbstractFixtureManager(Generic[T]):
-    model_class: ClassVar[type[Base]]
-
-    def __class_getitem__(cls, model_type: type[T]) -> type:
-        cls.model_class = model_type
-        cls_dict = {"model_class": cls.model_class}
-        return type(f"FixtureManager[{model_type.__name__}]", (cls,), cls_dict)
-
+class FixtureManager:
     def __init__(
         self,
-        create_item_success_hooks: list[Callable],
-        create_item_failure_hooks: list[Callable],
-        update_item_success_hooks: list[Callable],
+        create_item_success_hooks: list[Callable] = [ResponseValidator.validate_item_created],
+        create_item_failure_hooks: list[Callable] = [ResponseValidator.validate_item_conflict],
+        update_item_success_hooks: list[Callable] = [ResponseValidator.validate_item_updated],
     ) -> None:
         self.create_item_success_hooks = create_item_success_hooks
         self.create_item_failure_hooks = create_item_failure_hooks
         self.update_item_success_hooks = update_item_success_hooks
 
-    async def create_item_success(self, test_client: "AsyncTestClient", path: str, **kwargs: Any) -> UUID:
-        item = self.model_class(**kwargs)
+    async def create_item_success(
+        self, test_client: "AsyncTestClient", path: str, model_class: type[Base], **kwargs: Any
+    ) -> UUID:
+        item = model_class(**kwargs)
         async with test_client as client:
             response = await client.post(path, json=item.to_dict())
             # Run success hook
@@ -94,8 +89,10 @@ class AbstractFixtureManager(Generic[T]):
             result: UUID = response.json()["id"]
             return result
 
-    async def create_item_failure(self, test_client: "AsyncTestClient", path: str, **kwargs: Any) -> None:
-        item = self.model_class(**kwargs)
+    async def create_item_failure(
+        self, test_client: "AsyncTestClient", path: str, model_class: type[Base], **kwargs: Any
+    ) -> None:
+        item = model_class(**kwargs)
         async with test_client as client:
             response = await client.post(path, json=item.to_dict())
             # Run failure
@@ -118,41 +115,42 @@ class AbstractFixtureManager(Generic[T]):
                     hook(response, **kwargs)
 
 
+async def setup(
+    fixture: dict[str, dict[str, Any]],
+    fixture_id: dict[str, UUID],
+    fixture_manager: FixtureManager,
+    test_client: "AsyncTestClient",
+    path: str,
+    model_class: type[Base],
+) -> AsyncGenerator[None, None]:
+    titles = random.sample(list(fixture.keys()), len(fixture))
+    for title in titles:
+        fixture_id[title] = await fixture_manager.create_item_success(
+            test_client, path=path, model_class=model_class, **fixture[title]
+        )
+    yield
+    for key, id in fixture_id.items():
+        await fixture_manager.destroy_item(test_client, path=path, fixture_id=id)
+
+
 class AbstractBaseTestSuite(Generic[T]):
     path: ClassVar[str]
     fixture: ClassVar[dict[str, dict[str, Any]]]
     update_fixture: ClassVar[dict[str, dict[str, Any]]]
     invalid_create_fixture: ClassVar[dict[str, dict[str, Any]]] = {}
-    fixture_id: ClassVar[dict[str, UUID]] = {}
-    create_item_success_hooks: ClassVar[list[Callable]] = [ResponseValidator.validate_item_created]
-    create_item_failure_hooks: ClassVar[list[Callable]] = [ResponseValidator.validate_item_conflict]
-    update_item_success_hooks: ClassVar[list[Callable]] = [ResponseValidator.validate_item_updated]
-    fixture_manager: ClassVar[AbstractFixtureManager]
+    fixture_manager: ClassVar[FixtureManager] = FixtureManager()
+
+    model_class: ClassVar[type[Base]]
 
     def __class_getitem__(cls, model_type: type[T]) -> type:
-        fixture_manager = AbstractFixtureManager[model_type](  # type: ignore[valid-type]
-            create_item_failure_hooks=cls.create_item_failure_hooks,
-            create_item_success_hooks=cls.create_item_success_hooks,
-            update_item_success_hooks=cls.update_item_success_hooks,
-        )
-
-        cls_dict = {"fixture_manager": fixture_manager}
-
-        return type(f"TestSuite[{model_type.__name__}]", (cls,), cls_dict)
+        cls.model_class = model_type
+        cls_dict = {"model_class": cls.model_class}
+        return type(f"FixtureManager[{model_type.__name__}]", (cls,), cls_dict)
 
     @pytest.fixture(scope="function", autouse=True)
-    async def setup_create(self, test_client: "AsyncTestClient") -> AsyncGenerator[None, None]:
-        titles = random.sample(list(self.fixture.keys()), len(self.fixture))
-
-        for title in titles:
-            self.fixture_id[title] = await self.fixture_manager.create_item_success(
-                test_client, path=self.path, **self.fixture[title]
-            )
-
+    def _fixture_id(self) -> Generator[None, None, None]:
+        self.fixture_id: dict[str, UUID] = {}
         yield
-
-        for key, id in self.fixture_id.items():
-            await self.fixture_manager.destroy_item(test_client, path=self.path, fixture_id=id)
 
     async def test_find_items_by_id_successful(self, test_client: "AsyncTestClient") -> None:
         async with test_client as client:
@@ -167,11 +165,14 @@ class AbstractBaseTestSuite(Generic[T]):
             ResponseValidator.validate_return_item_count(len(self.fixture), response)
 
     async def test_update_items_successful(self, test_client: "AsyncTestClient") -> None:
-        for key, fixture in self.update_fixture.items():
-            fixture_id = self.fixture_id[key]
-            await self.fixture_manager.update_item(test_client, fixture_id=fixture_id, path=self.path, **fixture)
+        if hasattr(self, "update_fixture"):
+            for key, fixture in self.update_fixture.items():
+                fixture_id = self.fixture_id[key]
+                await self.fixture_manager.update_item(test_client, fixture_id=fixture_id, path=self.path, **fixture)
 
     async def test_create_invalid_items_unsuccessful(self, test_client: "AsyncTestClient") -> None:
-        if self.invalid_create_fixture:
-            for key, fixture in self.invalid_create_fixture.items():
-                await self.fixture_manager.create_item_failure(test_client, path=self.path, **fixture)
+        if hasattr(self, "invalid_create_fixture"):
+            for _, fixture in self.invalid_create_fixture.items():
+                await self.fixture_manager.create_item_failure(
+                    test_client, path=self.path, model_class=self.model_class, **fixture
+                )
