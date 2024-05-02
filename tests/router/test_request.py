@@ -60,7 +60,7 @@ class TestCreateRequest(AbstractBaseTestSuite[Request]):
         for key, value in self.fixture.items():
             dependent_key = value["project_id"]
             replacement_key = dependent_fixture_id[dependent_key]
-            self.fixture[key]["project_id"] = replacement_key  # type: ignore
+            self.fixture[key]["project_id"] = replacement_key
 
         # Count number of requests for each project
         self.counter: dict[str, int] = {}

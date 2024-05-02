@@ -24,5 +24,5 @@ class ProjectController(BaseController[Project]):
     return_dto = ProjectDTO.read_dto
 
     @get(return_dto=ProjectLiteDTO)
-    async def get_all_items(self, transaction: "AsyncSession") -> Sequence[Project]:  # type: ignore[name-defined]
+    async def get_all_items(self, transaction: "AsyncSession") -> Sequence[Project]:
         return await read_items_by_attrs(transaction, Project)
