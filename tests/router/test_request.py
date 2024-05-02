@@ -1,4 +1,3 @@
-import random
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from uuid import UUID
@@ -7,7 +6,6 @@ import pytest
 from litestar.testing import AsyncTestClient
 
 from src.model import Project, Request
-from src.model.base import Base
 from tests.helpers import (
     AbstractBaseTestSuite,
     FixtureManager,
