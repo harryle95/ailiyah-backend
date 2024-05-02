@@ -6,6 +6,9 @@ from uuid import UUID
 
 from litestar.datastructures import UploadFile
 
+__all__ = ("StorageServer", )
+
+
 ImageLike = UploadFile
 
 

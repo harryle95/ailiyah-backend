@@ -11,6 +11,9 @@ from litestar.response import Stream
 
 from src.service.storage.base import ImageLike, StorageServer
 
+__all__ = ("LocalFileStorage", )
+
+
 ParentPath = Path(__file__).parents[3]
 FilePath = ParentPath / "storage"
 Metadata = FilePath / "metadata.json"

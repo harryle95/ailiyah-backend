@@ -6,7 +6,6 @@ from uuid import UUID
 
 from litestar import Controller, Router, delete, get, post, put
 from litestar.di import Provide
-from sqlalchemy import delete as remove
 from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
 
@@ -86,15 +85,11 @@ class GenericController(Controller, Generic[T]):
 
 class BaseController(GenericController[T]):
     @get()
-    async def get_all_items(
-        self, table: Any, transaction: "AsyncSession"
-    ) -> Sequence[T.__name__]:  # type: ignore[name-defined]
+    async def get_all_items(self, table: Any, transaction: "AsyncSession") -> Sequence[T.__name__]:  # type: ignore[name-defined]
         return await read_items_by_attrs(transaction, table)
 
     @get("/{id:uuid}")
-    async def get_item_by_id(
-        self, table: Any, transaction: "AsyncSession", id: UUID
-    ) -> T.__name__:  # type: ignore[name-defined]
+    async def get_item_by_id(self, table: Any, transaction: "AsyncSession", id: UUID) -> T.__name__:  # type: ignore[name-defined]
         return await read_item_by_id(session=transaction, table=table, id=id)
 
     @post()
