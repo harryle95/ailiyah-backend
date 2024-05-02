@@ -9,7 +9,7 @@ from src.router.base import BaseController, create_item
 from src.router.typing.types import RequestDTO, RequestWithRawFile
 from src.service.storage.local import LocalFileStorage
 
-__all__ = ("RequestController", )
+__all__ = ("RequestController",)
 
 
 class RequestController(BaseController[Request]):
