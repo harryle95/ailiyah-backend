@@ -57,7 +57,7 @@ exclude_also = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config"
+addopts = "--strict-markers --strict-config --cov-fail-under=80"
 asyncio_mode = "auto"
 
 [tool.mypy]
