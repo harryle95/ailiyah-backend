@@ -12,5 +12,5 @@ class Prompt(Base):
     __tablename__ = "prompt_table"  # type: ignore[assignment]
 
     text: Mapped[str] = mapped_column(nullable=False)
-    image: Mapped[UUID] = mapped_column(nullable=True)
+    image: Mapped[UUID | None] = mapped_column(nullable=True)
     request_id: Mapped[UUID] = mapped_column(ForeignKey("request_table.id", ondelete="CASCADE"))
