@@ -8,12 +8,18 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 
 from src.model.prompt import Prompt
-from src.router.base import create_item, delete_item, read_item_by_id, read_items_by_attrs
+from src.router.base import create_item, delete_item, read_item_by_id
 from src.service.storage.base import StorageServer
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+__all__ = (
+    "PromptController",
+    "create_prompt",
+    "delete_prompt",
+    "update_prompt",
+)
 
+
+if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 

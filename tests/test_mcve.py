@@ -1,7 +1,6 @@
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Annotated
-from uuid import UUID, uuid4
 
 import pytest
 from litestar import Controller, Litestar, post
