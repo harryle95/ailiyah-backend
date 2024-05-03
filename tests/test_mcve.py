@@ -24,7 +24,7 @@ class PromptController(Controller):
 
     @post()
     def create_prompt(self, data: PromptRawDTO) -> str:
-        return "Sucess"
+        return "Success"
 
 
 @pytest.fixture(scope="function")
