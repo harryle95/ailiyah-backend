@@ -21,7 +21,7 @@ async def storage() -> AsyncGenerator[StorageServer, None]:
 async def setup(test_client: "AsyncTestClient") -> AsyncGenerator[UUID, None]:
     res = await test_client.post("project", json={"name": "dummy"})
     project_id = res.json()["id"]
-    res = await test_client.post("request", json={"project_id": project_id})
+    res = await test_client.post("request/base", json={"project_id": project_id})
     request_id = res.json()["id"]
 
     yield request_id
