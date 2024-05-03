@@ -49,8 +49,8 @@ async def update_prompt(data: PromptRawDTO, session: "AsyncSession", id: UUID, s
         if prompt.image is not None:
             await storage.update(data.image, prompt.image)
         else:
-            id = await storage.create(data.image)
-            prompt.image = id
+            image_id = await storage.create(data.image)
+            prompt.image = image_id
     else:
         if prompt.image is not None:
             await storage.delete(prompt.image)

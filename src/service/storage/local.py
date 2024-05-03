@@ -21,9 +21,9 @@ class LocalFileStorage(StorageServer):
 
     async def create(self, image: UploadFile) -> UUID:
         data = await image.read()
-        id = uuid4()
-        await self.store.set(str(id), data)
-        return id
+        image_id = uuid4()
+        await self.store.set(str(image_id), data)
+        return image_id
 
     async def update(self, image: UploadFile, id: UUID) -> None:
         data = await image.read()
@@ -33,7 +33,6 @@ class LocalFileStorage(StorageServer):
     async def delete(self, id: UUID) -> None:
         if await self.store.exists(str(id)):
             await self.store.delete(str(id))
-        return
 
     async def read(self, id: UUID) -> bytes | None:
         if await self.store.exists(str(id)):
