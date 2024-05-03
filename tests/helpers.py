@@ -81,38 +81,34 @@ class FixtureManager:
         self, test_client: "AsyncTestClient", path: str, model_class: type[Base], **kwargs: Any
     ) -> UUID:
         item = model_class(**kwargs)
-        async with test_client as client:
-            response = await client.post(path, json=item.to_dict())
-            # Run success hook
-            for hook in self.create_item_success_hooks:
-                hook(response, **kwargs)
-            result: UUID = response.json()["id"]
-            return result
+        response = await test_client.post(path, json=item.to_dict())
+        # Run success hook
+        for hook in self.create_item_success_hooks:
+            hook(response, **kwargs)
+        result: UUID = response.json()["id"]
+        return result
 
     async def create_item_failure(
         self, test_client: "AsyncTestClient", path: str, model_class: type[Base], **kwargs: Any
     ) -> None:
         item = model_class(**kwargs)
-        async with test_client as client:
-            response = await client.post(path, json=item.to_dict())
-            # Run failure
-            for hook in self.create_item_failure_hooks:
-                hook(response, **kwargs)
+        response = await test_client.post(path, json=item.to_dict())
+        # Run failure
+        for hook in self.create_item_failure_hooks:
+            hook(response, **kwargs)
 
     async def destroy_item(self, test_client: "AsyncTestClient", fixture_id: UUID, path: str) -> None:
-        async with test_client as client:
-            response = await client.delete(os.path.join(path, str(fixture_id)))
-            ResponseValidator.validate_item_deleted(response)
-            response = await client.get(os.path.join(path, str(fixture_id)))
-            ResponseValidator.validate_item_not_found(response)
+        response = await test_client.delete(os.path.join(path, str(fixture_id)))
+        ResponseValidator.validate_item_deleted(response)
+        response = await test_client.get(os.path.join(path, str(fixture_id)))
+        ResponseValidator.validate_item_not_found(response)
 
     async def update_item(self, test_client: "AsyncTestClient", fixture_id: UUID, path: str, **kwargs: Any) -> None:
         if fixture_id is not None:
-            async with test_client as client:
-                response = await client.put(os.path.join(path, str(fixture_id)), json=kwargs)
-                # Run update check
-                for hook in self.update_item_success_hooks:
-                    hook(response, **kwargs)
+            response = await test_client.put(os.path.join(path, str(fixture_id)), json=kwargs)
+            # Run update check
+            for hook in self.update_item_success_hooks:
+                hook(response, **kwargs)
 
 
 async def setup(
@@ -153,16 +149,14 @@ class AbstractBaseTestSuite(Generic[T]):
         yield
 
     async def test_find_items_by_id_successful(self, test_client: "AsyncTestClient") -> None:
-        async with test_client as client:
-            for key, fixture_id in self.fixture_id.items():
-                response = await client.get(os.path.join(self.path, str(fixture_id)))
-                ResponseValidator.validate_item_exist(response, **self.fixture[key])
+        for key, fixture_id in self.fixture_id.items():
+            response = await test_client.get(os.path.join(self.path, str(fixture_id)))
+            ResponseValidator.validate_item_exist(response, **self.fixture[key])
 
     async def test_find_all_items_successful(self, test_client: "AsyncTestClient") -> None:
-        async with test_client as client:
-            response = await client.get(self.path)
-            ResponseValidator.validate_status(200, response)
-            ResponseValidator.validate_return_item_count(len(self.fixture), response)
+        response = await test_client.get(self.path)
+        ResponseValidator.validate_status(200, response)
+        ResponseValidator.validate_return_item_count(len(self.fixture), response)
 
     async def test_update_items_successful(self, test_client: "AsyncTestClient") -> None:
         if hasattr(self, "update_fixture"):
