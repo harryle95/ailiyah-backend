@@ -26,8 +26,9 @@ if TYPE_CHECKING:
 @dataclass
 class _PromptRawDTO:
     text: str
-    request_id: UUID
+    request_id: UUID | None = None
     image: UploadFile | None = None
+    id: UUID | None = None
 
 
 PromptRawDTO = Annotated[_PromptRawDTO, Body(media_type=RequestEncodingType.MULTI_PART)]
