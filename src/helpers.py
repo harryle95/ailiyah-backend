@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 
 from advanced_alchemy.extensions.litestar.plugins.init.config.asyncio import (
     autocommit_before_send_handler,
@@ -11,12 +11,10 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.model.base import Base
+from src.service.storage.base import StorageServer
+from src.service.storage.local import LocalFileStorage
 
-__all__ = (
-    "create_db_config",
-    "provide_transaction",
-    "set_sqlite_pragma",
-)
+__all__ = ("create_db_config", "provide_transaction", "set_sqlite_pragma", "provide_storage")
 
 
 @event.listens_for(Engine, "connect")
@@ -39,6 +37,20 @@ async def provide_transaction(
         ) from exc
     except NoResultFound as exc:
         raise ClientException(status_code=HTTP_404_NOT_FOUND, detail="No database result matching query") from exc
+
+
+def provide_storage() -> Generator[StorageServer, None, None]:
+    yield LocalFileStorage()
+
+
+async def provide_test_storage() -> AsyncGenerator[StorageServer, None]:
+    storage = LocalFileStorage("test")
+    yield storage
+
+
+async def on_test_shutdown() -> None:
+    storage = LocalFileStorage("test")
+    await storage.delete_all()
 
 
 def create_db_config(sqlite_db: str) -> SQLAlchemyAsyncConfig:
