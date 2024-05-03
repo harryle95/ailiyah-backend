@@ -57,7 +57,7 @@ exclude_also = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config"
+addopts = "--strict-markers --strict-config --cov-fail-under=80"
 asyncio_mode = "auto"
 
 [tool.mypy]
@@ -124,6 +124,8 @@ lint.select = [
 ]
 line-length = 120
 lint.ignore = [
+  "A001", # id name shadowing
+  "A002", # id name shadowing
   "A003", # flake8-builtins - class attribute {name} is shadowing a python builtin
   "B010", # flake8-bugbear - do not call setattr with a constant attribute value
   "D100", # pydocstyle - missing docstring in public module

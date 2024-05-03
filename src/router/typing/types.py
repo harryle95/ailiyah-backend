@@ -11,7 +11,7 @@ from src.router.utils.dto import DTOGenerator
 
 __all__ = ["RequestDTO", "RequestWithRawFile"]
 
-RequestDTO = DTOGenerator[Request]()
+RequestDTO = DTOGenerator[Request](read_kwargs={"max_nested_depth": 1}, write_kwargs={"max_nested_depth": 0})
 ProjectDTO = DTOGenerator[Project](read_kwargs={"max_nested_depth": 1}, write_kwargs={"max_nested_depth": 0})
 
 
