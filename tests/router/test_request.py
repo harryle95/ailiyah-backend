@@ -70,7 +70,7 @@ class TestCreateRequest(AbstractBaseTestSuite[Request]):
                 self.counter[id] += 1
             else:
                 self.counter[id] = 1
-        async for _ in setup(self.fixture, self.fixture_id, self.fixture_manager, test_client, "request", Request):
+        async for _ in setup(self.fixture, self.fixture_id, self.fixture_manager, test_client, "request/base", Request):
             yield
 
     async def test_requesting_project_shows_requests(self, test_client: "AsyncTestClient") -> None:
@@ -84,7 +84,7 @@ class TestCreateRequest(AbstractBaseTestSuite[Request]):
     ) -> None:
         res = await test_client.post("project", json={"name": "dummy"})
         project_id = res.json()["id"]
-        res = await test_client.post("request", json={"project_id": project_id})
+        res = await test_client.post("request/base", json={"project_id": project_id})
         request_id = res.json()["id"]
         await test_client.delete(f"project/{project_id}")
         res = await test_client.get(f"request/{request_id}")
