@@ -19,15 +19,13 @@ class LocalFileStorage(StorageServer):
     def __init__(self, path: str | Path = FilePath) -> None:
         self.store = FileStore(FilePath / path)
 
-    async def create(self, image: UploadFile) -> UUID:
-        data = await image.read()
+    async def create(self, image: bytes) -> UUID:
         image_id = uuid4()
-        await self.store.set(str(image_id), data)
+        await self.store.set(str(image_id), image)
         return image_id
 
-    async def update(self, image: UploadFile, id: UUID) -> None:
-        data = await image.read()
-        await self.store.set(str(id), data)
+    async def update(self, image: bytes, id: UUID) -> None:
+        await self.store.set(str(id), image)
         return
 
     async def delete(self, id: UUID) -> None:
