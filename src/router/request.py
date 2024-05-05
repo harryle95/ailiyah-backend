@@ -1,6 +1,5 @@
 import json
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
 
 from litestar import delete, post, put
@@ -8,7 +7,7 @@ from litestar.contrib.pydantic import PydanticDTO
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from src.model.request import Request
 from src.router.base import BaseController, create_item, read_item_by_id
@@ -43,6 +42,7 @@ def parse_id(value: str) -> list[UUID | None]:
         raise
 
 
+# Needed for when images can be a list of upload file or a single upload file
 class CompositeRequest(BaseModel):
     project_id: UUID
     text: str
@@ -67,8 +67,10 @@ CompositeRequestDTO = PydanticDTO[CompositeRequest]
 def parse(data: CompositeRequest) -> tuple[list[str], list[UUID | None]]:
     parsed_text = parse_text(data.text)
     parsed_id = parse_id(data.id)
-    assert len(parsed_text) == len(parsed_id), "size of id and prompt must be equal"
-    assert len(parsed_text) == len(data.images), "size of text and size of images must be equal"
+    if len(parsed_text) == len(parsed_id):
+        raise ValueError("size of id and prompt must be equal")
+    if len(parsed_text) == len(data.images):
+        raise ValueError("size of text and size of images must be equal")
 
     return (parsed_text, parsed_id)
 

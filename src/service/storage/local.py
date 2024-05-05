@@ -2,7 +2,6 @@
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from litestar.datastructures import UploadFile
 from litestar.stores.file import FileStore
 
 from src.service.storage.base import StorageServer
