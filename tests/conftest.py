@@ -8,6 +8,7 @@ from litestar.testing import AsyncTestClient
 
 from src.helpers import create_db_config, on_test_shutdown, provide_test_storage, provide_transaction
 from src.router import ProjectController, PromptController, RequestController
+from src.service.storage.base import StorageServer
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -23,3 +24,9 @@ async def test_client() -> AsyncGenerator[AsyncTestClient[Litestar], None]:
     async with AsyncTestClient(app=app) as client:
         yield client
     p.unlink(missing_ok=True)
+
+
+@pytest.fixture(scope="function")
+async def storage() -> AsyncGenerator[StorageServer, None]:
+    storage = await provide_test_storage().__anext__()
+    yield storage
