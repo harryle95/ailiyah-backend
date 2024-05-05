@@ -26,12 +26,12 @@ __all__ = ("RequestController",)
 class CompositeRequest:
     project_id: UUID
     text: str
-    files: list[UploadFile]
+    images: list[UploadFile]
     id: str
 
 
-CompositeRequesAnnotated = Annotated[CompositeRequest, Body(media_type=RequestEncodingType.MULTI_PART)]
-CompositeRequestDTO = DataclassDTO[CompositeRequesAnnotated]
+CompositeRequestAnnotated = Annotated[CompositeRequest, Body(media_type=RequestEncodingType.MULTI_PART)]
+CompositeRequestDTO = DataclassDTO[CompositeRequest]
 
 
 async def delete_request(session: "AsyncSession", storage: "StorageServer", id: UUID) -> None:
@@ -54,9 +54,11 @@ class RequestController(BaseController[Request]):
         return request
 
     @post(dto=CompositeRequestDTO)
-    async def create_item(self, transaction: "AsyncSession", data: CompositeRequest, storage: StorageServer) -> Request:
+    async def create_item(
+        self, transaction: "AsyncSession", data: CompositeRequestAnnotated, storage: StorageServer
+    ) -> Request:
         texts: list[str] = json.loads(data.text)
-        files = data.files
+        files = data.images
 
         if len(texts) != len(files):
             raise ValueError("Length of text list must match number of attached files")
@@ -71,10 +73,10 @@ class RequestController(BaseController[Request]):
 
     @put("/{id:uuid}", dto=CompositeRequestDTO)
     async def update_item(
-        self, transaction: "AsyncSession", id: UUID, data: CompositeRequest, storage: StorageServer
+        self, transaction: "AsyncSession", id: UUID, data: CompositeRequestAnnotated, storage: StorageServer
     ) -> Request:
         texts: list[str] = json.loads(data.text)
-        files = data.files
+        files = data.images
         prompt_ids_str: list[str] = json.loads(data.id)
         prompt_ids: list[UUID | None] = [UUID(item) if item else None for item in prompt_ids_str]
         if len(texts) != len(files):
