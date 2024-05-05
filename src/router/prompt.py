@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
@@ -8,7 +9,7 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 
 from src.model.prompt import Prompt
-from src.router.base import create_item, delete_item, read_item_by_id
+from src.router.base import create_item, read_item_by_id, read_items_by_attrs
 from src.service.storage.base import StorageServer
 
 __all__ = (
@@ -26,16 +27,18 @@ if TYPE_CHECKING:
 @dataclass
 class _PromptRawDTO:
     text: str
-    request_id: UUID
-    image: UploadFile | None = None
+    image: UploadFile
+    request_id: UUID | None = None
+    id: UUID | None = None
 
 
 PromptRawDTO = Annotated[_PromptRawDTO, Body(media_type=RequestEncodingType.MULTI_PART)]
 
 
 async def create_prompt(data: PromptRawDTO, session: "AsyncSession", storage: StorageServer) -> Prompt:
-    if hasattr(data, "image") and data.image is not None:
-        image_id = await storage.create(data.image)
+    image = await data.image.read()
+    if image:
+        image_id = await storage.create(image)
         prompt_data = Prompt(text=data.text, image=image_id, request_id=data.request_id)
     else:
         prompt_data = Prompt(text=data.text, request_id=data.request_id)
@@ -45,12 +48,13 @@ async def create_prompt(data: PromptRawDTO, session: "AsyncSession", storage: St
 
 async def update_prompt(data: PromptRawDTO, session: "AsyncSession", id: UUID, storage: StorageServer) -> Prompt:
     prompt: Prompt = await read_item_by_id(session, Prompt, id)
-    if hasattr(data, "image") and data.image is not None:
+    image = await data.image.read()
+    if image:
         if prompt.image is not None:
-            await storage.update(data.image, prompt.image)
+            await storage.update(image, prompt.image)
         else:
-            id = await storage.create(data.image)
-            prompt.image = id
+            image_id = await storage.create(image)
+            prompt.image = image_id
     else:
         if prompt.image is not None:
             await storage.delete(prompt.image)
@@ -63,11 +67,16 @@ async def delete_prompt(id: UUID, session: "AsyncSession", storage: StorageServe
     prompt: Prompt = await read_item_by_id(session, Prompt, id)
     if prompt.image is not None:
         await storage.delete(prompt.image)
-    await delete_item(session, prompt.id, Prompt)
+    await session.delete(prompt)
 
 
 class PromptController(Controller):
     path = "prompt"
+
+    @get()
+    async def get_prompts(self, transaction: "AsyncSession") -> Sequence[Prompt]:
+        data: Sequence[Prompt] = await read_items_by_attrs(transaction, Prompt)
+        return data
 
     @get("/{id:uuid}")
     async def get_prompt_by_id(self, transaction: "AsyncSession", id: UUID) -> Prompt:

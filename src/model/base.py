@@ -10,6 +10,7 @@ __all__ = ("Base",)
 
 
 class Base(CommonTableAttributes, DeclarativeBase):
+    __mapper_args__ = {"confirm_deleted_rows": False}
     id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True, info=dto_field("read-only"))
 
     # Audit columns - read-only
