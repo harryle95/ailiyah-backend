@@ -22,10 +22,17 @@ class ProjectLiteDTO(SQLAlchemyDTO[Project]):
     config = SQLAlchemyDTOConfig(include={"id", "name"})
 
 
+class ProjectReadDTO(SQLAlchemyDTO[Project]):
+    config = SQLAlchemyDTOConfig(max_nested_depth=2)
+
 class ProjectController(BaseController[Project]):
     path = "/project"
     dto = ProjectDTO.write_dto
-    return_dto = ProjectDTO.read_dto
+
+    @get("/{id:uuid}", return_dto=ProjectReadDTO)
+    async def get_item_by_id(self, transaction: "AsyncSession", id: UUID)->Project:
+        data: Project = await read_item_by_id(transaction, Project, id)
+        return data 
 
     @get(return_dto=ProjectLiteDTO)
     async def get_all_items(
