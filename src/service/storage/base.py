@@ -4,6 +4,8 @@ import uuid
 from abc import ABC
 from uuid import UUID
 
+from litestar.response import Stream
+
 __all__ = ("StorageServer",)
 
 
@@ -27,3 +29,7 @@ class StorageServer(ABC):
     @abc.abstractmethod
     async def delete_all(self) -> None:
         return
+
+    @abc.abstractmethod
+    async def stream(self, id: UUID) -> Stream:
+        pass

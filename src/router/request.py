@@ -5,6 +5,7 @@ from uuid import UUID
 from litestar import delete, post, put
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
+from litestar.exceptions import HTTPException
 from litestar.params import Body
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -26,9 +27,11 @@ def parse_text(value: str) -> list[str]:
         parsed_value = json.loads(value)
         if isinstance(parsed_value, list):
             return parsed_value
-        raise ValueError(value)
-    except Exception:
-        raise
+        raise HTTPException(
+            detail="Unable to parse text, expect a json stringify version of a list of string.", status_code=400
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500) from e
 
 
 def parse_id(value: str) -> list[UUID | None]:
@@ -36,9 +39,11 @@ def parse_id(value: str) -> list[UUID | None]:
         parsed_value = json.loads(value)
         if isinstance(parsed_value, list):
             return [UUID(item) if item else None for item in parsed_value]
-        raise ValueError(value)
-    except Exception:
-        raise
+        raise HTTPException(
+            "Unable to parse id, expect a json stringify version of a list of id or null.", status_code=400
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500) from e
 
 
 # Needed for when images can be a list of upload file or a single upload file
@@ -56,7 +61,10 @@ class CompositeRequest(BaseModel):
             return [value]
         if isinstance(value, list):
             return value
-        raise ValueError(value)
+        raise HTTPException(
+            detail="Unable to parse file upload. Expect a file upload or a list of file upload. Null data must be set to empty file",
+            status_code=400,
+        )
 
 
 CompositeRequestAnnotated = Annotated[CompositeRequest, Body(media_type=RequestEncodingType.MULTI_PART)]
@@ -66,9 +74,9 @@ def parse(data: CompositeRequest) -> tuple[list[str], list[UUID | None]]:
     parsed_text = parse_text(data.text)
     parsed_id = parse_id(data.id)
     if len(parsed_text) != len(parsed_id):
-        raise ValueError("size of id and prompt must be equal")
+        raise HTTPException("Size of text and id must be equal", status_code=400)
     if len(parsed_text) != len(data.images):
-        raise ValueError("size of text and size of images must be equal")
+        raise HTTPException("Size of text and files must be equal", status_code=400)
 
     return (parsed_text, parsed_id)
 

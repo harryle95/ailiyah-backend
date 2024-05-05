@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from litestar.testing import AsyncTestClient
@@ -64,6 +64,10 @@ async def test_upload_accepts_prompt_with_no_image(
     data = res.json()
     assert data["image"] is None
     assert data["text"] == PROMPT
+
+
+async def test_delete_non_existing_prompt_raise_no_error(test_client: AsyncTestClient, storage: StorageServer) -> None:
+    await storage.delete(uuid4())
 
 
 async def test_upload_does_not_accept_empty_prompt(test_client: AsyncTestClient, setup: UUID) -> None:

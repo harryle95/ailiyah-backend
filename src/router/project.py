@@ -28,8 +28,10 @@ class ProjectController(BaseController[Project]):
     return_dto = ProjectDTO.read_dto
 
     @get(return_dto=ProjectLiteDTO)
-    async def get_all_items(self, transaction: "AsyncSession") -> Sequence[Project]:
-        return await read_items_by_attrs(transaction, Project)
+    async def get_all_items(
+        self, transaction: "AsyncSession", id: UUID | None = None, name: str | None = None
+    ) -> Sequence[Project]:
+        return await read_items_by_attrs(transaction, Project, name=name, id=id)
 
     @delete("/{id:uuid}")
     async def delete_item(self, transaction: "AsyncSession", id: UUID, storage: StorageServer) -> None:
