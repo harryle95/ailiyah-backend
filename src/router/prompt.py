@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 @dataclass
 class _PromptRawDTO:
     text: str
+    image: UploadFile
     request_id: UUID | None = None
-    image: UploadFile | None = None
     id: UUID | None = None
 
 
@@ -36,8 +36,9 @@ PromptRawDTO = Annotated[_PromptRawDTO, Body(media_type=RequestEncodingType.MULT
 
 
 async def create_prompt(data: PromptRawDTO, session: "AsyncSession", storage: StorageServer) -> Prompt:
-    if hasattr(data, "image") and data.image is not None:
-        image_id = await storage.create(data.image)
+    image = await data.image.read()
+    if image:
+        image_id = await storage.create(image)
         prompt_data = Prompt(text=data.text, image=image_id, request_id=data.request_id)
     else:
         prompt_data = Prompt(text=data.text, request_id=data.request_id)
@@ -47,11 +48,12 @@ async def create_prompt(data: PromptRawDTO, session: "AsyncSession", storage: St
 
 async def update_prompt(data: PromptRawDTO, session: "AsyncSession", id: UUID, storage: StorageServer) -> Prompt:
     prompt: Prompt = await read_item_by_id(session, Prompt, id)
-    if hasattr(data, "image") and data.image is not None:
+    image = await data.image.read()
+    if image:
         if prompt.image is not None:
-            await storage.update(data.image, prompt.image)
+            await storage.update(image, prompt.image)
         else:
-            image_id = await storage.create(data.image)
+            image_id = await storage.create(image)
             prompt.image = image_id
     else:
         if prompt.image is not None:
