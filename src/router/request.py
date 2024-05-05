@@ -30,7 +30,7 @@ def parse_text(value: str) -> list[str]:
         raise HTTPException(
             detail="Unable to parse text, expect a json stringify version of a list of string.", status_code=400
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500) from e
 
 
@@ -42,7 +42,7 @@ def parse_id(value: str) -> list[UUID | None]:
         raise HTTPException(
             "Unable to parse id, expect a json stringify version of a list of id or null.", status_code=400
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500) from e
 
 

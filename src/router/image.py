@@ -5,6 +5,8 @@ from litestar.response import Stream
 
 from src.service.storage import StorageServer
 
+__all__ = ("ImageController",)
+
 
 class ImageController(Controller):
     path: str = "image"
