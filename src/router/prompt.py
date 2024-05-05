@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
@@ -8,7 +9,7 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 
 from src.model.prompt import Prompt
-from src.router.base import create_item, delete_item, read_item_by_id
+from src.router.base import create_item, read_item_by_id, read_items_by_attrs
 from src.service.storage.base import StorageServer
 
 __all__ = (
@@ -64,11 +65,16 @@ async def delete_prompt(id: UUID, session: "AsyncSession", storage: StorageServe
     prompt: Prompt = await read_item_by_id(session, Prompt, id)
     if prompt.image is not None:
         await storage.delete(prompt.image)
-    await delete_item(session, prompt.id, Prompt)
+    await session.delete(prompt)
 
 
 class PromptController(Controller):
     path = "prompt"
+
+    @get()
+    async def get_prompts(self, transaction: "AsyncSession") -> Sequence[Prompt]:
+        data: Sequence[Prompt] = await read_items_by_attrs(transaction, Prompt)
+        return data
 
     @get("/{id:uuid}")
     async def get_prompt_by_id(self, transaction: "AsyncSession", id: UUID) -> Prompt:
