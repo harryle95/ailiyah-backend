@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
 
 from litestar import delete, post, put
-from litestar.contrib.pydantic import PydanticDTO
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
@@ -61,15 +60,14 @@ class CompositeRequest(BaseModel):
 
 
 CompositeRequestAnnotated = Annotated[CompositeRequest, Body(media_type=RequestEncodingType.MULTI_PART)]
-CompositeRequestDTO = PydanticDTO[CompositeRequest]
 
 
 def parse(data: CompositeRequest) -> tuple[list[str], list[UUID | None]]:
     parsed_text = parse_text(data.text)
     parsed_id = parse_id(data.id)
-    if len(parsed_text) == len(parsed_id):
+    if len(parsed_text) != len(parsed_id):
         raise ValueError("size of id and prompt must be equal")
-    if len(parsed_text) == len(data.images):
+    if len(parsed_text) != len(data.images):
         raise ValueError("size of text and size of images must be equal")
 
     return (parsed_text, parsed_id)
@@ -109,7 +107,7 @@ class RequestController(BaseController[Request]):
 
         return request
 
-    @put("/{id:uuid}", dto=CompositeRequestDTO)
+    @put("/{id:uuid}")
     async def update_item(
         self, transaction: "AsyncSession", id: UUID, data: CompositeRequestAnnotated, storage: StorageServer
     ) -> Request:

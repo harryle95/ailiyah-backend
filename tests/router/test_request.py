@@ -124,7 +124,9 @@ UPDATE_IMAGE = b"update_image"
 
 
 @pytest.fixture(scope="function")
-async def setup_prompts_with_image(test_client: "AsyncTestClient", setup_project: UUID) -> AsyncGenerator[UUID, None]:
+async def setup_prompts_with_image(
+    test_client: "AsyncTestClient", setup_project: UUID
+) -> AsyncGenerator[tuple[UUID, UUID], None]:
     project_id = setup_project
     request = await test_client.post(
         "request",
@@ -136,13 +138,13 @@ async def setup_prompts_with_image(test_client: "AsyncTestClient", setup_project
         },
     )
     assert request.status_code == 201
-    yield request.json()["id"]
+    yield project_id, request.json()["id"]
 
 
 @pytest.fixture(scope="function")
 async def setup_prompts_with_and_without_image(
     test_client: "AsyncTestClient", setup_project: UUID
-) -> AsyncGenerator[UUID, None]:
+) -> AsyncGenerator[tuple[UUID, UUID], None]:
     project_id = setup_project
     request = await test_client.post(
         "request",
@@ -154,14 +156,14 @@ async def setup_prompts_with_and_without_image(
         },
     )
     assert request.status_code == 201
-    yield request.json()["id"]
+    yield project_id, request.json()["id"]
 
 
 @pytest.fixture(scope="function")
 async def get_prompts_with_and_without_image(
-    test_client: "AsyncTestClient", setup_prompts_with_and_without_image: UUID
-) -> AsyncGenerator[tuple[UUID, UUID, UUID], None]:
-    request_id = setup_prompts_with_and_without_image
+    test_client: "AsyncTestClient", setup_prompts_with_and_without_image: tuple[UUID, UUID]
+) -> AsyncGenerator[tuple[UUID, UUID, UUID, UUID], None]:
+    project_id, request_id = setup_prompts_with_and_without_image
     request = await test_client.get(f"request/{request_id}")
     assert request.status_code == 200
     prompts = request.json()["prompts"]
@@ -174,13 +176,13 @@ async def get_prompts_with_and_without_image(
             no_image = prompt["id"]
     assert no_image is not None
     assert has_image is not None
-    yield request_id, has_image, no_image
+    yield project_id, request_id, has_image, no_image
 
 
 async def test_given_request_with_one_image_read_successful(
-    setup_prompts_with_image: UUID, test_client: "AsyncTestClient", storage: "StorageServer"
+    setup_prompts_with_image: tuple[UUID, UUID], test_client: "AsyncTestClient", storage: "StorageServer"
 ) -> None:
-    request_id = setup_prompts_with_image
+    _, request_id = setup_prompts_with_image
     request = await test_client.get(f"request/{request_id}")
     assert request.status_code == 200
     assert len(request.json()["prompts"]) == 1
@@ -194,12 +196,10 @@ async def test_given_request_with_one_image_read_successful(
 
 async def test_given_request_with_and_without_image_update_remove_image_from_prompt_with_image(
     test_client: "AsyncTestClient",
-    setup_project: UUID,
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
 ) -> None:
     # Make update
-    project_id = setup_project
-    request_id, has_image, no_image = get_prompts_with_and_without_image
+    project_id, request_id, has_image, no_image = get_prompts_with_and_without_image
     request = await test_client.put(
         f"request/{request_id}",
         files=[("images", b""), ("images", b"")],
@@ -222,13 +222,11 @@ async def test_given_request_with_and_without_image_update_remove_image_from_pro
 
 async def test_given_request_with_and_without_image_update_add_image_from_prompt_with_no_image(
     test_client: "AsyncTestClient",
-    setup_project: UUID,
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
     storage: StorageServer,
 ) -> None:
     # Make update
-    project_id = setup_project
-    request_id, has_image, no_image = get_prompts_with_and_without_image
+    project_id, request_id, has_image, no_image = get_prompts_with_and_without_image
     request = await test_client.put(
         f"request/{request_id}",
         files=[("images", FIRST_IMAGE), ("images", SECOND_IMAGE)],
@@ -253,13 +251,11 @@ async def test_given_request_with_and_without_image_update_add_image_from_prompt
 
 async def test_given_request_with_and_without_image_update_add_null_id_add_new_prompt(
     test_client: "AsyncTestClient",
-    setup_project: UUID,
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
     storage: StorageServer,
 ) -> None:
     # Make update
-    project_id = setup_project
-    request_id, has_image, no_image = get_prompts_with_and_without_image
+    project_id, request_id, has_image, no_image = get_prompts_with_and_without_image
     request = await test_client.put(
         f"request/{request_id}",
         files=[("images", FIRST_IMAGE), ("images", SECOND_IMAGE), ("images", UPDATE_IMAGE)],
@@ -294,13 +290,11 @@ async def test_given_request_with_and_without_image_update_add_null_id_add_new_p
 
 async def test_given_request_with_and_without_image_update_no_remention_previous_prompts_delete(
     test_client: "AsyncTestClient",
-    setup_project: UUID,
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
     storage: StorageServer,
 ) -> None:
     # Make update
-    project_id = setup_project
-    request_id, has_image, no_image = get_prompts_with_and_without_image
+    project_id, request_id, has_image, no_image = get_prompts_with_and_without_image
     request = await test_client.put(
         f"request/{request_id}",
         files=[("images", FIRST_IMAGE), ("images", UPDATE_IMAGE)],
@@ -331,12 +325,48 @@ async def test_given_request_with_and_without_image_update_no_remention_previous
     assert new_prompt.json()["text"] == UPDATE_PROMPT
 
 
+async def test_given_request_with_and_without_image_update_remove_previous_prompts(
+    test_client: "AsyncTestClient",
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
+    storage: StorageServer,
+) -> None:
+    # Make update
+    project_id, request_id, has_image, no_image = get_prompts_with_and_without_image
+
+    request = await test_client.put(
+        f"request/{request_id}",
+        files=[("images", FIRST_IMAGE)],
+        data={
+            "text": json.dumps([FIRST_PROMPT]),
+            "id": json.dumps([None]),
+            "project_id": str(project_id),
+        },
+    )
+    assert request.status_code == 200
+    request = await test_client.get(f"request/{request_id}")
+    assert len(request.json()["prompts"]) == 1
+    new_prompt_id = None
+    for prompt in request.json()["prompts"]:
+        if prompt["id"] not in [has_image, no_image]:
+            new_prompt_id = prompt["id"]
+    assert new_prompt_id is not None
+    # Validate
+    no_image_prompt = await test_client.get(f"prompt/{no_image}")
+    assert no_image_prompt.status_code == 404
+    has_image_prompt = await test_client.get(f"prompt/{has_image}")
+    assert has_image_prompt.status_code == 404
+    new_prompt = await test_client.get(f"prompt/{new_prompt_id}")
+    assert new_prompt.json()["image"] is not None
+    assert await storage.read(new_prompt.json()["image"]) == FIRST_IMAGE
+    assert new_prompt.json()["text"] == FIRST_PROMPT
+
+
 async def test_given_request_with_and_without_image_read_successful(
     test_client: "AsyncTestClient",
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
     storage: "StorageServer",
 ) -> None:
-    _, has_image, no_image = get_prompts_with_and_without_image
+    _, _, has_image, no_image = get_prompts_with_and_without_image
     no_image_prompt = await test_client.get(f"prompt/{no_image}")
     assert no_image_prompt.json()["image"] is None
     assert no_image_prompt.json()["text"] == SECOND_PROMPT
@@ -349,9 +379,9 @@ async def test_given_request_with_and_without_image_read_successful(
 
 async def test_delete_request_delete_all_prompts(
     test_client: "AsyncTestClient",
-    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID],
+    get_prompts_with_and_without_image: tuple[UUID, UUID, UUID, UUID],
 ) -> None:
-    request_id, has_image, no_image = get_prompts_with_and_without_image
+    _, request_id, has_image, no_image = get_prompts_with_and_without_image
     response = await test_client.delete(f"request/{request_id}")
     assert response.status_code == 204
     get_request = await test_client.get(f"request/{request_id}")
