@@ -4,17 +4,10 @@ from uuid import UUID
 import pytest
 from litestar.testing import AsyncTestClient
 
-from src.helpers import provide_test_storage
 from src.service.storage.base import StorageServer
 
 IMAGE = b"image"
 PROMPT = "prompt"
-
-
-@pytest.fixture(scope="function")
-async def storage() -> AsyncGenerator[StorageServer, None]:
-    storage = await provide_test_storage().__anext__()
-    yield storage
 
 
 @pytest.fixture(scope="function")
@@ -33,10 +26,11 @@ async def setup(test_client: "AsyncTestClient") -> AsyncGenerator[UUID, None]:
 async def setup_prompt_no_image(
     test_client: "AsyncTestClient", setup: UUID
 ) -> AsyncGenerator[tuple[UUID, UUID | None], None]:
-    res = await test_client.post("/prompt", files={"not_image": IMAGE}, data={"text": PROMPT, "request_id": setup})
+    res = await test_client.post("/prompt", files={"image": b""}, data={"text": PROMPT, "request_id": setup})
     assert res.status_code == 201
     id: UUID = res.json()["id"]
     image: UUID | None = res.json()["image"]
+    assert image is None
     yield (id, image)
 
 
@@ -65,11 +59,10 @@ async def test_upload_accepts_prompt_with_no_image(
     test_client: AsyncTestClient, setup_prompt_no_image: tuple[UUID, UUID | None], storage: StorageServer
 ) -> None:
     id, image = setup_prompt_no_image
-    assert image is None
     res = await test_client.get(f"/prompt/{id}")
     assert res.status_code == 200
     data = res.json()
-    assert data["image"] == image
+    assert data["image"] is None
     assert data["text"] == PROMPT
 
 
@@ -115,11 +108,8 @@ async def test_update_old_prompt_has_image_new_prompt_no_image(
     new_prompt = "new_prompt"
 
     id, image = setup_prompt
-    assert image is not None
 
-    res = await test_client.put(
-        f"/prompt/{id}", files={"not_image": IMAGE}, data={"text": new_prompt, "request_id": setup}
-    )
+    res = await test_client.put(f"/prompt/{id}", files={"image": b""}, data={"text": new_prompt, "request_id": setup})
     assert res.status_code == 200
     res = await test_client.get(f"/prompt/{id}")
     assert res.status_code == 200
@@ -136,11 +126,8 @@ async def test_update_old_prompt_no_image_new_prompt_no_image(
     new_prompt = "new_prompt"
 
     id, image = setup_prompt_no_image
-    assert image is None
 
-    res = await test_client.put(
-        f"/prompt/{id}", files={"not_image": IMAGE}, data={"text": new_prompt, "request_id": setup}
-    )
+    res = await test_client.put(f"/prompt/{id}", files={"image": b""}, data={"text": new_prompt, "request_id": setup})
     assert res.status_code == 200
     res = await test_client.get(f"/prompt/{id}")
     assert res.status_code == 200
