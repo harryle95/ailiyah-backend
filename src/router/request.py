@@ -13,6 +13,7 @@ from src.model.request import Request
 from src.router.base import BaseController, create_item, read_item_by_id
 from src.router.prompt import _PromptRawDTO, create_prompt, delete_prompt, update_prompt
 from src.router.typing.types import RequestDTO
+from src.service.image_generation.generator import generate_output
 from src.service.storage.base import StorageServer
 
 if TYPE_CHECKING:
@@ -87,6 +88,8 @@ async def delete_request(session: "AsyncSession", storage: "StorageServer", id: 
     prompts_ids = [item.id for item in prompts]
     for prompt_id in prompts_ids:
         await delete_prompt(id=prompt_id, session=session, storage=storage)
+    if request.output_image:
+        await storage.delete(request.output_image)
     await session.delete(request)
 
 
@@ -112,7 +115,8 @@ class RequestController(BaseController[Request]):
         for i in range(len(texts)):
             init_prompt = _PromptRawDTO(text=texts[i], request_id=request.id, image=files[i])
             await create_prompt(data=init_prompt, session=transaction, storage=storage)
-
+        output = await generate_output(request, storage)
+        request.output_image = output
         return request
 
     @put("/{id:uuid}")
@@ -148,6 +152,8 @@ class RequestController(BaseController[Request]):
         # Remaining prompts -> has been deleted -> Delete
         for prompt_id in initial_prompts_id:
             await delete_prompt(id=prompt_id, session=transaction, storage=storage)
+        output = await generate_output(request, storage)
+        request.output_image = output
         return request
 
     @delete("/{id:uuid}")
