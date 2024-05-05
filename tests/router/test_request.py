@@ -432,3 +432,37 @@ async def test_mismatch_id_image_throws(test_client: "AsyncTestClient", setup_pr
         },
     )
     assert request.status_code == 400
+
+
+async def test_given_one_prompt_an_output_is_generated(
+    test_client: "AsyncTestClient", setup_prompts_with_image: tuple[UUID, UUID], storage: "StorageServer"
+) -> None:
+    _, request_id = setup_prompts_with_image
+    request = await test_client.get(f"request/{request_id}")
+    assert request.status_code == 200
+    output = request.json()["output_image"]
+    assert output is not None
+    assert await storage.read(output) is not None
+
+
+async def test_given_multiple_prompts_an_output_is_generated(
+    test_client: "AsyncTestClient", setup_prompts_with_and_without_image: tuple[UUID, UUID], storage: "StorageServer"
+) -> None:
+    _, request_id = setup_prompts_with_and_without_image
+    request = await test_client.get(f"request/{request_id}")
+    assert request.status_code == 200
+    output = request.json()["output_image"]
+    assert output is not None
+    assert await storage.read(output) is not None
+
+
+async def test_delete_request_cleans_up_output(
+    test_client: "AsyncTestClient", setup_prompts_with_image: tuple[UUID, UUID], storage: "StorageServer"
+) -> None:
+    _, request_id = setup_prompts_with_image
+    request = await test_client.get(f"request/{request_id}")
+    assert request.status_code == 200
+    output = request.json()["output_image"]
+    request = await test_client.delete(f"request/{request_id}")
+    assert request.status_code == 204
+    assert await storage.read(output) is None
