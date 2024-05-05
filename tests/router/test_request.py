@@ -390,3 +390,45 @@ async def test_delete_request_delete_all_prompts(
     assert get_has_image.status_code == 404
     get_no_image = await test_client.get(f"prompt/{no_image}")
     assert get_no_image.status_code == 404
+
+
+async def test_mismatch_text_id_throws(test_client: "AsyncTestClient", setup_project: UUID) -> None:
+    project_id = setup_project
+    request = await test_client.post(
+        "request",
+        files=[("images", FIRST_IMAGE), ("images", FIRST_IMAGE)],
+        data={
+            "text": json.dumps([FIRST_PROMPT, SECOND_PROMPT]),
+            "id": json.dumps([None]),
+            "project_id": str(project_id),
+        },
+    )
+    assert request.status_code == 400
+
+
+async def test_mismatch_text_image_throws(test_client: "AsyncTestClient", setup_project: UUID) -> None:
+    project_id = setup_project
+    request = await test_client.post(
+        "request",
+        files=[("images", FIRST_IMAGE), ("images", FIRST_IMAGE)],
+        data={
+            "text": json.dumps([FIRST_PROMPT]),
+            "id": json.dumps([None, None]),
+            "project_id": str(project_id),
+        },
+    )
+    assert request.status_code == 400
+
+
+async def test_mismatch_id_image_throws(test_client: "AsyncTestClient", setup_project: UUID) -> None:
+    project_id = setup_project
+    request = await test_client.post(
+        "request",
+        files=[("images", FIRST_IMAGE)],
+        data={
+            "text": json.dumps([FIRST_PROMPT]),
+            "id": json.dumps([None, None]),
+            "project_id": str(project_id),
+        },
+    )
+    assert request.status_code == 400

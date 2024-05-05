@@ -7,7 +7,7 @@ from litestar import Litestar
 from litestar.testing import AsyncTestClient
 
 from src.helpers import create_db_config, on_test_shutdown, provide_test_storage, provide_transaction
-from src.router import ProjectController, PromptController, RequestController
+from src.router import ImageController, ProjectController, PromptController, RequestController
 from src.service.storage.base import StorageServer
 
 
@@ -16,7 +16,7 @@ async def test_client() -> AsyncGenerator[AsyncTestClient[Litestar], None]:
     p = Path("test.sqlite")
     db_config = create_db_config("test.sqlite")
     app = Litestar(
-        [ProjectController, RequestController, PromptController],
+        [ProjectController, RequestController, PromptController, ImageController],
         dependencies={"transaction": provide_transaction, "storage": provide_test_storage},
         plugins=[SQLAlchemyPlugin(db_config)],
         on_shutdown=[on_test_shutdown],

@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 from uuid import UUID
 
-from litestar import Controller, Router, delete, get, post, put
+from litestar import Controller, Router, get, post, put
 from litestar.di import Provide
 from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
@@ -13,7 +13,6 @@ __all__ = (
     "BaseController",
     "GenericController",
     "create_item",
-    "delete_item",
     "read_item_by_id",
     "read_items_by_attrs",
     "update_item",
@@ -62,11 +61,6 @@ async def update_item(
     return result
 
 
-async def delete_item(session: "AsyncSession", id: "UUID", table: type[Any]) -> Any:
-    item = await read_item_by_id(session, table, id)
-    await session.delete(item)
-
-
 class GenericController(Controller, Generic[T]):
     model_type: type[T]
 
@@ -85,8 +79,8 @@ class GenericController(Controller, Generic[T]):
 
 class BaseController(GenericController[T]):
     @get()
-    async def get_all_items(self, table: Any, transaction: "AsyncSession") -> Sequence[T.__name__]:  # type: ignore[name-defined]
-        return await read_items_by_attrs(transaction, table)
+    async def get_all_items(self, table: Any, transaction: "AsyncSession", **kwargs: Any) -> Sequence[T.__name__]:  # type: ignore[name-defined]
+        return await read_items_by_attrs(transaction, table, **kwargs)
 
     @get("/{id:uuid}")
     async def get_item_by_id(self, table: Any, transaction: "AsyncSession", id: UUID) -> T.__name__:  # type: ignore[name-defined]
@@ -110,7 +104,3 @@ class BaseController(GenericController[T]):
         data: T.__name__,  # type: ignore[name-defined]
     ) -> T.__name__:  # type: ignore[name-defined]
         return await update_item(session=transaction, id=id, data=data, table=table)
-
-    @delete("/{id:uuid}")
-    async def delete_item(self, table: Any, transaction: "AsyncSession", id: UUID) -> None:
-        await delete_item(session=transaction, id=id, table=table)

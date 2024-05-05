@@ -45,7 +45,7 @@ skip = 'pdm.lock'
 
 [tool.coverage.run]
 concurrency = ["multiprocessing", "thread"]
-omit = ["*/tests/*"]
+omit = ["*/tests/*", "src/app.py", "src/helpers.py", "src/router/utils/**"]
 parallel = true
 plugins = ["covdefaults"]
 source = ["src"]

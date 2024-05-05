@@ -22,3 +22,7 @@ class TestProject(AbstractBaseTestSuite[Project]):
             self.fixture, self.fixture_id, self.fixture_manager, test_client, self.path, self.model_class
         ):
             yield
+
+    async def test_read_by_name(self, test_client: "AsyncTestClient") -> None:
+        result = await test_client.get("project", params={"name": "first_project"})
+        assert result.status_code == 200
