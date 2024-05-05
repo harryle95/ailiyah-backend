@@ -1,3 +1,4 @@
+import random
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from uuid import UUID
@@ -70,8 +71,16 @@ class TestCreateRequest(AbstractBaseTestSuite[Request]):
                 self.counter[id] += 1
             else:
                 self.counter[id] = 1
-        async for _ in setup(self.fixture, self.fixture_id, self.fixture_manager, test_client, "request/base", Request):
-            yield
+
+        titles = random.sample(list(self.fixture.keys()), len(self.fixture))
+
+        for title in titles:
+            self.fixture_id[title] = await fixture_manager.create_item_success(
+                test_client, path="request/base", model_class=Request, **self.fixture[title]
+            )
+        yield
+        for key, id in self.fixture_id.items():
+            await fixture_manager.destroy_item(test_client, path="request", fixture_id=id)
 
     async def test_requesting_project_shows_requests(self, test_client: "AsyncTestClient") -> None:
         for id, count in self.counter.items():
