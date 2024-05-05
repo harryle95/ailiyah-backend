@@ -11,7 +11,7 @@ from litestar.params import Body
 
 from src.model.request import Request
 from src.router.base import BaseController, create_item, read_item_by_id
-from src.router.prompt import PromptRawDTO, create_prompt, delete_prompt, update_prompt
+from src.router.prompt import _PromptRawDTO, create_prompt, delete_prompt, update_prompt
 from src.router.typing.types import RequestDTO
 from src.service.storage.base import StorageServer
 
@@ -23,15 +23,15 @@ __all__ = ("RequestController",)
 
 
 @dataclass
-class __CompositeRequestDTO:
+class CompositeRequest:
     project_id: UUID
     text: str
     files: list[UploadFile]
     id: str
 
 
-_CompositeRequestDTO = Annotated[__CompositeRequestDTO, Body(media_type=RequestEncodingType.MULTI_PART)]
-CompositeRequestDTO = DataclassDTO[_CompositeRequestDTO]
+CompositeRequesAnnotated = Annotated[CompositeRequest, Body(media_type=RequestEncodingType.MULTI_PART)]
+CompositeRequestDTO = DataclassDTO[CompositeRequesAnnotated]
 
 
 async def delete_request(session: "AsyncSession", storage: "StorageServer", id: UUID) -> None:
@@ -54,30 +54,33 @@ class RequestController(BaseController[Request]):
         return request
 
     @post(dto=CompositeRequestDTO)
-    async def create_item(
-        self, transaction: "AsyncSession", data: _CompositeRequestDTO, storage: StorageServer
-    ) -> Request:
+    async def create_item(self, transaction: "AsyncSession", data: CompositeRequest, storage: StorageServer) -> Request:
         texts: list[str] = json.loads(data.text)
         files = data.files
-        assert len(texts) == len(files)
+
+        if len(texts) != len(files):
+            raise ValueError("Length of text list must match number of attached files")
+
         request: Request = await create_item(
             session=transaction, table=Request, data=Request(project_id=data.project_id)
         )
         for i in range(len(texts)):
-            init_prompt = PromptRawDTO(text=texts[i], request_id=request.id, image=files[i])
+            init_prompt = _PromptRawDTO(text=texts[i], request_id=request.id, image=files[i])
             await create_prompt(data=init_prompt, session=transaction, storage=storage)
         return request
 
     @put("/{id:uuid}", dto=CompositeRequestDTO)
     async def update_item(
-        self, transaction: "AsyncSession", id: UUID, data: _CompositeRequestDTO, storage: StorageServer
+        self, transaction: "AsyncSession", id: UUID, data: CompositeRequest, storage: StorageServer
     ) -> Request:
         texts: list[str] = json.loads(data.text)
         files = data.files
         prompt_ids_str: list[str] = json.loads(data.id)
         prompt_ids: list[UUID | None] = [UUID(item) if item else None for item in prompt_ids_str]
-        assert len(texts) == len(files)
-        assert len(prompt_ids) == len(texts)
+        if len(texts) != len(files):
+            raise ValueError("Length of text list must match number of attached files")
+        if len(prompt_ids) != len(texts):
+            raise ValueError("Length of text list must match length of prompt ids")
 
         request: Request = await read_item_by_id(transaction, Request, id)
         initial_prompts = request.prompts
@@ -88,12 +91,12 @@ class RequestController(BaseController[Request]):
             prompt_id = prompt_ids[i]
             # New prompt -> Create
             if prompt_id is None:
-                init_prompt = PromptRawDTO(text=text, request_id=request.id, image=image)
+                init_prompt = _PromptRawDTO(text=text, request_id=request.id, image=image)
                 await create_prompt(data=init_prompt, session=transaction, storage=storage)
             else:
                 # Old prompt -> Update
                 if prompt_id in initial_prompts_id:
-                    prompt = PromptRawDTO(text=text, request_id=id, image=image, id=prompt_id)
+                    prompt = _PromptRawDTO(text=text, request_id=id, image=image, id=prompt_id)
                     await update_prompt(data=prompt, session=transaction, id=prompt_id, storage=storage)
                     initial_prompts_id.remove(prompt_id)
 
