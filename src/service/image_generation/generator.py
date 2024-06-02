@@ -33,7 +33,7 @@ def get_output(text: str) -> str:
                 matching = False
                 break
         if matching:
-            return random.choice(v)
+            return random.choice(v)  # noqa: S311
     return "dog_v1.jpeg"
 
 

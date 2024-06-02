@@ -16,4 +16,8 @@ class Prompt(Base):
     text: Mapped[str] = mapped_column(nullable=False)
     image: Mapped[UUID | None] = mapped_column(nullable=True)
     request_id: Mapped[UUID] = mapped_column(ForeignKey("request_table.id", ondelete="CASCADE"))
-    request: Mapped[Request] = relationship(lazy=None, back_populates="prompts", info=dto_field("read-only"))
+    request: Mapped[Request] = relationship(
+        lazy="selectin",
+        back_populates="prompts",
+        info=dto_field("read-only"),
+    )
