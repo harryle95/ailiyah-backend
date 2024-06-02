@@ -1,9 +1,11 @@
 from uuid import UUID
 
+from litestar.dto import dto_field
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.model.base import Base
+from src.model.request import Request
 
 __all__ = ("Prompt",)
 
@@ -14,3 +16,4 @@ class Prompt(Base):
     text: Mapped[str] = mapped_column(nullable=False)
     image: Mapped[UUID | None] = mapped_column(nullable=True)
     request_id: Mapped[UUID] = mapped_column(ForeignKey("request_table.id", ondelete="CASCADE"))
+    request: Mapped[Request] = relationship(lazy=None, back_populates="prompts", info=dto_field("read-only"))

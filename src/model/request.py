@@ -19,4 +19,9 @@ class Request(Base):
     output_image: Mapped[UUID] = mapped_column(nullable=True)
     project_id: Mapped[UUID] = mapped_column(ForeignKey("project_table.id", ondelete="CASCADE"))
 
-    prompts: Mapped[list["Prompt"]] = relationship(lazy="selectin", info=dto_field("read-only"), cascade="all, delete")
+    prompts: Mapped[list["Prompt"]] = relationship(
+        lazy="selectin",
+        info=dto_field("read-only"),
+        cascade="all, delete",
+        back_populates="request",
+    )
