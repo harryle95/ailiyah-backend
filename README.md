@@ -27,23 +27,23 @@ This is the backend repository for our [AILIYAH](https://github.com/haryle/ailiy
 
 ## Installation Instructions
 
-Pull this repository and run 
+Pull this repository and run
 
 ```
-pdm install 
+pdm install
 ```
 
 to install all the dependencies
 
 ## Setup instructions
 
-After installing, run 
+After installing, run
 
 ```
 make app-dev
 ```
 
-You should see something like this 
+You should see something like this
 
 ![](resources/image.png)
 
