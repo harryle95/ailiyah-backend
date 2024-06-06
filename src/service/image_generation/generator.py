@@ -12,16 +12,16 @@ ParentPath = Path(__file__).parents[0]
 ResourcePath = ParentPath / "resource"
 
 PROP_MAPPING = {
-    ("dark", "grey"): ["dark_grey.jpg"],
-    ("jacket"): ["jacket.png"],
-    ("model", "outfit", "hat", "bag", "shoe"): ["model_outfit_hat_bag_shoe_v1.png", "model_outfit_hat_bag_shoe_v2.png"],
-    ("sketch", "tree"): ["sketch_trees.jpg"],
-    ("sunglasses"): ["sunglasses_face.png"],
-    ("triangular", "windows"): ["triangular_windows.jpg"],
-    ("white", "flower"): ["white_flower.jpg"],
-    ("white", "top", "black", "skirt"): ["white_top_black_skirt_v1.png"],
-    ("dog"): ["dog_v1.jpeg", "dog_v2.jpeg"],
-    ("golden", "retriever"): ["golden-retriever.jpg"],
+    ("dark",): ["dark_grey.jpg"],
+    ("jacket",): ["jacket.png"],
+    ("shoe",): ["model_outfit_hat_bag_shoe_v1.png", "model_outfit_hat_bag_shoe_v2.png"],
+    ("sketch",): ["sketch_trees.jpg"],
+    ("sunglasses",): ["sunglasses_face.png"],
+    ("triangular",): ["triangular_windows.jpg"],
+    ("chair",): ["white_flower.jpg"],
+    ("skirt",): ["white_top_black_skirt_v1.png"],
+    ("dog",): ["dog_v1.jpeg", "dog_v2.jpeg"],
+    ("golden",): ["golden-retriever.jpg"],
 }
 
 

@@ -112,10 +112,12 @@ class RequestController(BaseController[Request]):
         request: Request = await create_item(
             session=transaction, table=Request, data=Request(project_id=data.project_id)
         )
+        request.prompts = []
         for i in range(len(texts)):
             init_prompt = _PromptRawDTO(text=texts[i], request_id=request.id, image=files[i])
             prompt_data = await create_prompt(data=init_prompt, session=transaction, storage=storage)
             prompt_data.request = request
+            request.prompts.append(prompt_data)
         await transaction.flush()
         output = await generate_output(request, storage)
         request.output_image = output

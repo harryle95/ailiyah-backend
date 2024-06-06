@@ -22,6 +22,5 @@ class Request(Base):
     prompts: Mapped[list["Prompt"]] = relationship(
         lazy="selectin",
         info=dto_field("read-only"),
-        cascade="all, delete",
         back_populates="request",
     )
